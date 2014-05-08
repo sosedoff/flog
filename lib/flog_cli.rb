@@ -1,6 +1,7 @@
 require "rubygems"
 require "optparse"
 require "forwardable"
+require "json"
 
 require "flog"
 
@@ -135,6 +136,10 @@ class FlogCLI
         option[:parser] = Ruby19Parser
       end
 
+      opts.on("--json", "Output as JSON") do
+        option[:json] = true
+      end
+
       next if self.plugins.empty?
       opts.separator "Plugin options:"
 
@@ -222,10 +227,49 @@ class FlogCLI
     end
   end
 
+  def output_details_as_hash(max)
+    details = []
+
+    each_by_score(max) do |class_method, score, call_list|
+      item = {
+        method: class_method,
+        score: score,
+        location: nil,
+        line: nil
+      }
+
+      location = method_locations[class_method]
+      if location
+        item[:location], item[:line] = location.split(":")
+      end
+
+      details << item
+    end
+
+    details
+  end
+
+  def report_json(io, threshold)
+    result = {
+      score: {
+        total: total_score,
+        average: average
+      },
+      methods: output_details_as_hash(threshold)
+    }
+
+    io.puts(JSON.dump(result))
+  end
+
   ##
   # Report results to #io, STDOUT by default.
 
   def report(io = $stdout)
+    if option[:json]
+      report_json(io, threshold)
+      return
+    end
+
     io.puts "%8.1f: %s" % [total_score, "flog total"]
     io.puts "%8.1f: %s" % [average, "flog/method average"]
 
