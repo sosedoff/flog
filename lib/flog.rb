@@ -11,7 +11,7 @@ class File
 end
 
 class Flog < MethodBasedSexpProcessor
-  VERSION = "4.2.0" # :nodoc:
+  VERSION = "4.3.2" # :nodoc:
 
   ##
   # Cut off point where the report should stop unless --all given.
@@ -47,7 +47,7 @@ class Flog < MethodBasedSexpProcessor
                          2
                        when /^1\.9/ then
                          1.5
-                       when /^2\.[01]/ then
+                       when /^2\./ then
                          1
                        else
                          5
@@ -124,7 +124,7 @@ class Flog < MethodBasedSexpProcessor
 
   def calculate
     each_by_score threshold do |class_method, score, call_list|
-      klass = class_method.split(/#|::/).first
+      klass = class_method.scan(/.+(?=#|::)/).first
 
       method_scores[klass] << [class_method, score]
       scores[klass] += score

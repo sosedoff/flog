@@ -91,13 +91,13 @@ class TestFlog < FlogTest
   def test_process_alias
     sexp = s(:alias, s(:lit, :a), s(:lit, :b))
 
-    util_process sexp, 2.0, :alias => 2.0
+    assert_process sexp, 2.0, :alias => 2.0
   end
 
   def test_process_and
     sexp = s(:and, s(:lit, :a), s(:lit, :b))
 
-    util_process sexp, 1.0, :branch => 1.0
+    assert_process sexp, 1.0, :branch => 1.0
   end
 
   def test_process_attrasgn
@@ -108,15 +108,15 @@ class TestFlog < FlogTest
                s(:call, nil, :b)),
              s(:call, nil, :c))
 
-    util_process(sexp, 3.162,
-                 :c => 1.0, :b => 1.0, :a => 1.0, :assignment => 1.0)
+    assert_process(sexp, 3.162,
+                   :c => 1.0, :b => 1.0, :a => 1.0, :assignment => 1.0)
   end
 
   # def test_process_attrset
   #   sexp = s(:attrset, :@writer)
   #
-  #   util_process(sexp, 3.162,
-  #                :c => 1.0, :b => 1.0, :a => 1.0, :assignment => 1.0)
+  #   assert_process(sexp, 3.162,
+  #                  :c => 1.0, :b => 1.0, :a => 1.0, :assignment => 1.0)
   #
   #   flunk "Not yet"
   # end
@@ -124,7 +124,7 @@ class TestFlog < FlogTest
   def test_process_block
     sexp = s(:block, s(:and, s(:lit, :a), s(:lit, :b)))
 
-    util_process sexp, 1.1, :branch => 1.1 # 10% penalty over process_and
+    assert_process sexp, 1.1, :branch => 1.1 # 10% penalty over process_and
   end
 
   def test_process_block_pass
@@ -135,16 +135,17 @@ class TestFlog < FlogTest
     bonus = case RUBY_VERSION
             when /^1\.8\.7/ then 0.4
             when /^1\.9/    then 0.3
-            when /^2\.[01]/ then 0.2
+            when /^2\./     then 0.2
+            else raise "Unhandled version #{RUBY_VERSION}"
             end
 
     bonus += Flog::OTHER_SCORES[:to_proc_normal]
 
-    util_process(sexp, 3.4 + bonus,
-                 :a              => 1.0,
-                 :block_pass     => 1.2,
-                 :b              => 1.2,
-                 :to_proc_normal => 0.0 + bonus)
+    assert_process(sexp, 3.4 + bonus,
+                   :a              => 1.0,
+                   :block_pass     => 1.2,
+                   :b              => 1.2,
+                   :to_proc_normal => 0.0 + bonus)
   end
 
   def test_process_block_pass_colon2
@@ -152,21 +153,21 @@ class TestFlog < FlogTest
              s(:block_pass,
                s(:colon2, s(:const, :A), :B)))
 
-    util_process(sexp, 2.2,
-                 :a              => 1.0,
-                 :block_pass     => 1.2)
+    assert_process(sexp, 2.2,
+                   :a              => 1.0,
+                   :block_pass     => 1.2)
   end
 
   def test_process_block_pass_iter
     sexp = s(:block_pass,
              s(:iter, s(:call, nil, :lambda), nil, s(:lit, 1)))
 
-    util_process(sexp, 12.316,
-                 :lit_fixnum    =>  0.275,
-                 :block_pass    =>  1.0,
-                 :lambda        =>  1.0,
-                 :branch        =>  1.0,
-                 :to_proc_icky! => 10.0)
+    assert_process(sexp, 12.316,
+                   :lit_fixnum    =>  0.275,
+                   :block_pass    =>  1.0,
+                   :lambda        =>  1.0,
+                   :branch        =>  1.0,
+                   :to_proc_icky! => 10.0)
   end
 
   def test_process_block_pass_lasgn
@@ -175,18 +176,18 @@ class TestFlog < FlogTest
                :b,
                s(:iter, s(:call, nil, :lambda), nil, s(:lit, 1))))
 
-    util_process(sexp, 17.333,
-                 :lit_fixnum    =>  0.275,
-                 :block_pass    =>  1.0,
-                 :lambda        =>  1.0,
-                 :assignment    =>  1.0,
-                 :branch        =>  1.0,
-                 :to_proc_lasgn => 15.0)
+    assert_process(sexp, 17.333,
+                   :lit_fixnum    =>  0.275,
+                   :block_pass    =>  1.0,
+                   :lambda        =>  1.0,
+                   :assignment    =>  1.0,
+                   :branch        =>  1.0,
+                   :to_proc_lasgn => 15.0)
   end
 
   def test_process_call
     sexp = s(:call, nil, :a)
-    util_process sexp, 1.0, :a => 1.0
+    assert_process sexp, 1.0, :a => 1.0
   end
 
   def test_process_case
@@ -201,7 +202,7 @@ class TestFlog < FlogTest
              s(:when, s(:array, s(:lit, :a)), s(:nil)),
              nil)
 
-    util_process sexp, 2.1, :branch => 2.1
+    assert_process sexp, 2.1, :branch => 2.1
   end
 
   def test_process_class
@@ -211,7 +212,7 @@ class TestFlog < FlogTest
              s(:colon2, s(:const, :X), :Y), nil,
              s(:scope, s(:lit, 42)))
 
-    util_process sexp, 0.25, :lit_fixnum => 0.25
+    assert_process sexp, 0.25, :lit_fixnum => 0.25
   end
 
   # TODO:
@@ -236,7 +237,7 @@ class TestFlog < FlogTest
                s(:block,
                  s(:lit, 42))))
 
-    util_process sexp, 0.275, :lit_fixnum => 0.275
+    assert_process sexp, 0.275, :lit_fixnum => 0.275
   end
 
   def test_process_defn_in_self
@@ -281,7 +282,7 @@ class TestFlog < FlogTest
                s(:block,
                  s(:lit, 42))))
 
-    util_process sexp, 0.275, :lit_fixnum => 0.275
+    assert_process sexp, 0.275, :lit_fixnum => 0.275
   end
 
   # FIX: huh? over-refactored?
@@ -294,7 +295,7 @@ class TestFlog < FlogTest
              s(:call, nil, :b), # outside block, not penalized
              s(:call, nil, :a), nil)
 
-    util_process sexp, 2.326, :branch => 1.0, :b => 1.0, :a => 1.1
+    assert_process sexp, 2.326, :branch => 1.0, :b => 1.0, :a => 1.1
   end
 
   def test_process_iter
@@ -302,7 +303,7 @@ class TestFlog < FlogTest
              s(:call, nil, :loop), nil,
              s(:if, s(:true), s(:break), nil))
 
-    util_process sexp, 2.326, :loop => 1.0, :branch => 2.1
+    assert_process sexp, 2.326, :loop => 1.0, :branch => 2.1
   end
 
   def test_process_iter_dsl
@@ -317,7 +318,7 @@ class TestFlog < FlogTest
 
     @klass, @meth = "task", "#blah"
 
-    util_process sexp, 2.0, :something => 1.0, :task => 1.0
+    assert_process sexp, 2.0, :something => 1.0, :task => 1.0
   end
 
   def test_process_iter_dsl_regexp
@@ -332,7 +333,7 @@ class TestFlog < FlogTest
 
     @klass, @meth = "task", "#/regexp/"
 
-    util_process sexp, 2.0, :something => 1.0, :task => 1.0
+    assert_process sexp, 2.0, :something => 1.0, :task => 1.0
   end
 
   def test_process_iter_dsl_hash
@@ -347,7 +348,7 @@ class TestFlog < FlogTest
 
     @klass, @meth = "task", "#woot"
 
-    util_process sexp, 2.3, :something => 1.0, :task => 1.0, :lit_fixnum => 0.3
+    assert_process sexp, 2.3, :something => 1.0, :task => 1.0, :lit_fixnum => 0.3
   end
 
   def test_process_iter_dsl_namespaced
@@ -389,17 +390,17 @@ class TestFlog < FlogTest
 
   def test_process_lit
     sexp = s(:lit, :y)
-    util_process sexp, 0.0
+    assert_process sexp, 0.0
   end
 
   def test_process_lit_int
     sexp = s(:lit, 42)
-    util_process sexp, 0.25, :lit_fixnum => 0.25
+    assert_process sexp, 0.25, :lit_fixnum => 0.25
   end
 
   def test_process_lit_float # and other lits
     sexp = s(:lit, 3.1415) # TODO: consider penalizing floats if not in cdecl
-    util_process sexp, 0.0
+    assert_process sexp, 0.0
   end
 
   def test_process_lit_bad
@@ -413,7 +414,7 @@ class TestFlog < FlogTest
              s(:array, s(:lasgn, :a), s(:lasgn, :b)),
              s(:to_ary, s(:call, nil, :c)))
 
-    util_process sexp, 3.162, :c => 1.0, :assignment => 3.0
+    assert_process sexp, 3.162, :c => 1.0, :assignment => 3.0
   end
 
   def test_process_module
@@ -423,20 +424,20 @@ class TestFlog < FlogTest
              s(:colon2, s(:const, :X), :Y),
              s(:scope, s(:lit, 42)))
 
-    util_process sexp, 0.25, :lit_fixnum => 0.25
+    assert_process sexp, 0.25, :lit_fixnum => 0.25
   end
 
   def test_process_sclass
     sexp = s(:sclass, s(:self), s(:scope, s(:lit, 42)))
-    util_process sexp, 5.375, :sclass => 5.0, :lit_fixnum => 0.375
+    assert_process sexp, 5.375, :sclass => 5.0, :lit_fixnum => 0.375
   end
 
   def test_process_super
     sexp = s(:super)
-    util_process sexp, 1.0, :super => 1.0
+    assert_process sexp, 1.0, :super => 1.0
 
     sexp = s(:super, s(:lit, 42))
-    util_process sexp, 1.25, :super => 1.0, :lit_fixnum => 0.25
+    assert_process sexp, 1.25, :super => 1.0, :lit_fixnum => 0.25
   end
 
   def test_process_while
@@ -445,18 +446,18 @@ class TestFlog < FlogTest
              s(:call, nil, :b),
              true)
 
-    util_process sexp, 2.417, :branch => 1.0, :a => 1.1, :b => 1.1
+    assert_process sexp, 2.417, :branch => 1.0, :a => 1.1, :b => 1.1
   end
 
   def test_process_yield
     sexp = s(:yield)
-    util_process sexp, 1.00, :yield => 1.0
+    assert_process sexp, 1.00, :yield => 1.0
 
     sexp = s(:yield, s(:lit, 4))
-    util_process sexp, 1.25, :yield => 1.0, :lit_fixnum => 0.25
+    assert_process sexp, 1.25, :yield => 1.0, :lit_fixnum => 0.25
 
     sexp = s(:yield, s(:lit, 42), s(:lit, 24))
-    util_process sexp, 1.50, :yield => 1.0, :lit_fixnum => 0.50
+    assert_process sexp, 1.50, :yield => 1.0, :lit_fixnum => 0.50
   end
 
   def test_score_method
@@ -500,11 +501,11 @@ class TestFlog < FlogTest
     assert_equal exp.keys.sort_by(&:to_s), act.keys.sort_by(&:to_s)
 
     exp.keys.each do |k|
-      assert_in_epsilon exp[k], act[k], 0.001, k
+      assert_in_epsilon exp[k], act[k], 0.001, "key = #{k.inspect}"
     end
   end
 
-  def util_process sexp, score = -1, hash = {}
+  def assert_process sexp, score = -1, hash = {}
     setup
     @flog.process sexp
 
@@ -540,8 +541,8 @@ class TestFlog < FlogTest
     @flog.calculate_total_scores
     @flog.calculate
 
-    assert_equal({ 'MyKlass' => 42.0 }, @flog.scores)
-    assert_equal({ 'MyKlass' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.method_scores)
+    assert_equal({ 'MyKlass::Base' => 42.0 }, @flog.scores)
+    assert_equal({ 'MyKlass::Base' => [["MyKlass::Base#mymethod", 42.0]] }, @flog.method_scores)
   end
 
   def test_reset
@@ -586,6 +587,35 @@ class TestFlog < FlogTest
     assert_equal(1.0, @flog.multiplier)
     assert_equal({ "Coder#happy?" => { :sample => 1.0 } }, @flog.calls)
     assert_equal({ "Coder" => 1.0 }, @flog.scores)
+  end
+
+  def test_method_scores
+    user_class = %(
+      module User
+        class Account
+          def blah n
+            puts "blah" * n
+          end
+        end
+
+        class Profile
+          def bleh n
+            puts "bleh" * n
+          end
+        end
+      end
+    )
+    user_file = "user.rb"
+
+    @flog.flog_ruby user_class, user_file
+    @flog.calculate_total_scores
+    @flog.calculate
+
+    expected = {
+      "User::Account"=>[["User::Account#blah", 2.2]],
+      "User::Profile"=>[["User::Profile#bleh", 2.2]]
+    }
+    assert_equal(expected, @flog.method_scores)
   end
 
   def setup_my_klass
